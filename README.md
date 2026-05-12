@@ -6,19 +6,18 @@ A hands-on project demonstrating how to access, filter, parse, and correlate Win
 
 ## 🎯 Project Overview
 
-Windows Event Logs are one of the most important data sources available to a SOC analyst. They record everything from successful and failed authentication attempts to privilege escalation and system errors — and being able to interrogate them quickly with native tools is a fundamental skill.
+Windows Event Logs were the first thing I dug into when I started learning SOC fundamentals — and for good reason. They record everything from login attempts to privilege escalation, and being able to query them quickly with native tools felt like a skill worth having before touching a SIEM.
 
-This project walks through five practical exercises focused on credential-based attack detection (Event IDs **4624** and **4625**), demonstrating the full investigation workflow: **access → filter → export → parse → correlate**.
+This project covers five exercises built around credential-based attack detection using Event IDs **4624** and **4625**, following the full workflow: **access → filter → export → parse → correlate**.
 
 ---
-
 
 ## 📋 Pre-requisites
 
 - Basic understanding of the Windows operating system
 - Familiarity with the command-line interface
 - Administrative privileges on the Windows machine
-  
+
 ---
 
 ## 🖥️ Lab Environment
@@ -46,30 +45,29 @@ This project walks through five practical exercises focused on credential-based 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/82919d4b-7a7a-42ad-a94c-5e138e7d4825" alt="Log Parser 2.2 download page on Microsoft Download Center" width="700"><br>
   <em>Figure 1: Log Parser 2.2 download page on the Microsoft Download Center</em>
-  
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/32461cc8-5e13-4f15-b094-59ef6c4e502a" alt="Log Parser 2.2 download page on Microsoft Download Center" width="700"><br>
   <em>Figure 2: Run the installer with administrative privileges and follow the on-screen prompt</em>
-  
+
 <br>
- 
-<p align="center">
+<br>
+2. Click through the wizard and click **Finish** when complete. <p align="left">
+
+ <p align="center">
   <img src="https://github.com/user-attachments/assets/81d95b06-876d-478e-b24f-5f9e5f35eb15" alt="Log Parser 2.2 Setup Wizard completion screen" width="700"><br>
   <em>Figure 3: Log Parser 2.2 installation complete</em>
 </p>
 
 <br>
-2. Click through the wizard and click **Finish** when complete.
 
-<br><br>
-
+3. By default, Log Parser installs to `C:\Program Files (x86)\Log Parser 2.2\`.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f5b7c80b-ae45-4c1b-a078-ecd72fc72cfe" alt="Log Parser 2.2 folder visible in Program Files (x86)" width="700"><br>
   <em>Figure 4: Log Parser 2.2 installation directory in Program Files (x86)</em>
 </p>
-<br>
-4. By default, Log Parser installs to `C:\Program Files (x86)\Log Parser 2.2\`.
+
 <br>
 
 > 💡 **Note:** Log Parser is officially unsupported (last updated in 2005) but still works reliably on modern Windows. PowerShell's `Get-WinEvent` is its modern equivalent.
@@ -92,7 +90,6 @@ This project walks through five practical exercises focused on credential-based 
   <img src="https://github.com/user-attachments/assets/85a32b35-2313-4bef-bb71-a36995c0634d" alt="Event Viewer showing the Security log" width="700"><br>
   <em>Figure 5: Event Viewer displaying the Security log under Windows Logs</em>
 </p>
-
 
 **Expected Output:** You should be able to navigate the various event logs and identify different event types — particularly authentication-related events in the Security log.
 
@@ -123,7 +120,6 @@ This project walks through five practical exercises focused on credential-based 
   <img src="https://github.com/user-attachments/assets/dd29bfa9-6210-484e-892f-40080875d078" alt="Save As dialog exporting filtered events as FailedLogins.evtx" width="700"><br>
   <em>Figure 7: Exporting the filtered Security log as FailedLogins.evtx</em>
 </p>
-
 
 **Expected Output:** A `FailedLogins.evtx` file containing only Event ID 4625 entries, ready for further analysis.
 
@@ -160,9 +156,8 @@ This project walks through five practical exercises focused on credential-based 
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/0b4a4774-7b52-47d7-84b7-c968dadfdd91" alt="Log Parser command output in CMD alongside the resulting CSV opened in Excel" width="700"><br>
-  <em>Figure 8: Log Parser extracting failed login data into CSV — command output and resulting file</em>
+  <em>Figure 8: Log Parser extracted failed login data into a CSV file and resulting file</em>
 </p>
-
 
 **Expected Output:** A CSV file containing the timestamp, Event ID, event type name, and full message for each failed login attempt — ready for filtering, sorting, or pivoting in spreadsheet software.
 
@@ -205,22 +200,17 @@ This project walks through five practical exercises focused on credential-based 
 
 **Steps:**
 
-1. **Open Event Viewer** and select the **Security** log.
-2. **Identify the two relevant Event IDs:**
-   - **Event ID 4624** — *An account was successfully logged on*
-   - **Event ID 4625** — *An account failed to log on*
-
-3. **Extract failed logins to CSV** using Log Parser in PowerShell:
+1. **Extract failed logins to CSV** using Log Parser in PowerShell:
    ```powershell
    & "C:\Program Files (x86)\Log Parser 2.2\LogParser.exe" "SELECT TimeGenerated, EXTRACT_TOKEN(EXTRACT_TOKEN(Message, 1, 'Account Name:'), 0, 'Account Domain:') AS Username INTO temp_failed.csv FROM FailedLogins.evtx WHERE EventID=4625" -i:EVT -o:CSV
    ```
 
-4. **Extract successful logins to CSV** using Log Parser in PowerShell:
+2. **Extract successful logins to CSV** using Log Parser in PowerShell:
    ```powershell
    & "C:\Program Files (x86)\Log Parser 2.2\LogParser.exe" "SELECT TimeGenerated, EXTRACT_TOKEN(EXTRACT_TOKEN(Message, 1, 'Account Name:'), 0, 'Account Domain:') AS Username INTO temp_success.csv FROM SuccessfulLogins.evtx WHERE EventID=4624" -i:EVT -o:CSV
    ```
 
-5. **Correlate the two CSV files** using PowerShell to produce `CorrelatedLogins.csv`:
+3. **Correlate the two CSV files** using PowerShell to produce `CorrelatedLogins.csv`:
    ```powershell
    $failed = Import-Csv "temp_failed.csv"
    $success = Import-Csv "temp_success.csv"
@@ -239,7 +229,7 @@ This project walks through five practical exercises focused on credential-based 
    $results | Export-Csv -Path CorrelatedLogins.csv -NoTypeInformation
    ```
 
-6. **Review `CorrelatedLogins.csv`** for patterns — particularly successful logins that follow multiple failed attempts from the same user, which is a classic indicator of brute-force or password-spray activity.
+4. **Review `CorrelatedLogins.csv`** for patterns — particularly successful logins that follow multiple failed attempts from the same user, which is a classic indicator of brute-force or password-spray activity.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/a5b6fed8-4c8e-4cc5-b858-cbe958529dc7" alt="CorrelatedLogins.csv open in Excel showing FailedTime, SuccessTime and Username columns" width="700"><br>
@@ -261,27 +251,26 @@ This project walks through five practical exercises focused on credential-based 
 ## 🎓 Lessons Learned
 
 ### Technical insights
-- **Native tooling has serious power.** Before reaching for a SIEM, an analyst can do meaningful investigation with just Event Viewer, PowerShell, and Log Parser. This builds intuition for *what* a SIEM is doing under the hood.
-- **Log Parser's SQL syntax has real limitations.** While the `SELECT`, `FROM`, and `WHERE` clauses work well against `.evtx` files, `JOIN` operations and table aliases are not supported for that input format. Workarounds — such as extracting to CSV first and joining there — are necessary for multi-file correlation.
-- **PowerShell's `Get-WinEvent` is the modern path.** While Log Parser is fast for one-off single-file queries, PowerShell scales better for repeatable, scriptable analysis, handles complex logic like multi-file correlation natively, and integrates cleanly with the rest of the Windows ecosystem.
-- **PowerShell quoting requires care.** When calling external executables like `LogParser.exe` from PowerShell, the `&` call operator is required, and nested quotes inside SQL strings must be managed carefully. Running complex Log Parser queries from Command Prompt avoids most of these quoting issues.
+- **I underestimated native tooling.** Before this project I assumed you needed a SIEM to do anything meaningful with logs. Turns out Event Viewer, PowerShell, and Log Parser can get you surprisingly far — and working at this level gave me a much better understanding of what a SIEM is actually doing behind the scenes.
+- **Log Parser's SQL syntax hits a wall fast.** The basic `SELECT`/`FROM`/`WHERE` stuff works fine against `.evtx` files, but the moment I tried a `JOIN` between two event log files it fell apart completely. Not supported for that input format. I had to export both files to CSV first and do the join in PowerShell — which actually turned out to be more flexible anyway.
+- **`Get-WinEvent` is where I'd start next time.** Log Parser is handy for quick one-off queries but PowerShell handles the more complex stuff much better, scales to scripting, and doesn't need a separate install.
+- **PowerShell quoting will catch you out.** Calling `LogParser.exe` from PowerShell looks straightforward until the path has spaces in it and the query has nested quotes. The `&` call operator is required, and getting the quoting right inside the SQL string took more trial and error than I expected.
 
 ### SOC analyst mindset
-- **Event ID literacy is foundational.** Knowing 4624 (successful login) and 4625 (failed login) is the bedrock of credential-attack detection. Recognising these IDs at a glance is the difference between fast triage and slow guesswork.
-- **Correlation is where value lives.** A failed login is noise; a failed login *followed by* a successful one from the same user is a potential incident. The entire point of Exercise 5 is the mental shift from looking at single events to looking at *patterns across time*.
-- **Machine accounts deserve attention.** The account `WIN11$` — a computer account identifiable by the trailing `$` — appeared in both failed and successful login events at unusual hours. Machine accounts don't normally produce interactive login failures, making this a meaningful signal worth investigating further.
-- **Native tools sharpen SIEM skills.** After analysing logs in raw form, Splunk queries become more confident — you know exactly what fields you're looking for and why, rather than relying on pre-built dashboards.
+- **Knowing your Event IDs matters more than I thought.** Once I found the ID's for successful and failed logins (4624/4625) I've filtered the logs for what I was interested in instead of fishing around. It's a small thing but it adds up fast during triage.
+- **A single event tells you almost nothing.** The interesting stuff only appeared when I started looking at sequences — a failed login followed by a success from the same account is a very different story from just a failed login on its own.
+- **Machine accounts are easy to overlook.** I nearly ignored `WIN11$` in the output because it didn't look like a user account. The trailing `$` means it's a computer account, and computer accounts don't normally produce interactive login failures — so when they do, it's worth paying attention to.
+- **Doing this manually made Splunk click.** After wrangling raw `.evtx` files by hand, the first time I ran a similar query in Splunk I actually understood what it was doing. That context made a real difference.
 
 ### Challenges & how I overcame them
-- **Log Parser JOIN syntax does not work on `.evtx` files.** The exercise brief implied a direct JOIN between two `.evtx` files was possible. Testing revealed that Log Parser 2.2 does not support `JOIN` or table aliases for the EVT input format — only for CSV and other text-based formats. The solution was a two-stage approach: use Log Parser to extract each `.evtx` file to CSV, then use PowerShell to perform the correlation join on the resulting CSV files.
-- **Usernames are not a top-level field in `.evtx` logs.** The username is embedded inside the `Message` field rather than exposed as a dedicated column. Log Parser's `EXTRACT_TOKEN` function was used to parse it out using the `Account Name:` and `Account Domain:` delimiters in the message text.
+- **Log Parser JOIN syntax does not work on `.evtx` files.** The exercise brief implied a direct JOIN between two `.evtx` files was possible. Testing revealed that Log Parser 2.2 does not support `JOIN` or table aliases for the EVT input format — only for CSV and other text-based formats. I ended up extracting each file to CSV first, then doing the correlation join in PowerShell.
+- **Usernames are buried inside the Message field.** They're not exposed as a top-level column in `.evtx` logs — they're embedded in the message text. I had to use Log Parser's `EXTRACT_TOKEN` function with the `Account Name:` and `Account Domain:` delimiters to pull them out.
 - **PowerShell echoes commands instead of executing them** when the `&` call operator is omitted and the executable path contains spaces. Adding `&` before the quoted path resolved this immediately.
-- **PIN authentication doesn't generate failed login events.** Because the machine was configured to log in using a Windows PIN rather than a password, there were no Event ID 4625 entries in the Security log to work with. PIN-based authentication bypasses the standard credential checking that produces these events. The solution was to create a separate local user account via Command Prompt (`net user TestUser Password123! /add`) and deliberately attempt to log in with the wrong password several times to generate the required 4625 events, followed by a successful login to generate a matching 4624 event.
+- **PIN authentication doesn't generate failed login events.** Because the machine was configured to log in using a Windows PIN rather than a password, there were no Event ID 4625 entries in the Security log to work with. I created a separate local account with `net user TestUser Password123! /add` and deliberately logged in with the wrong password a few times to generate the events I needed.
 
 ### What I would do differently next time
-- **Build a `.ps1` script for the full Exercise 5 workflow.** The three-step correlation process (extract failed → extract successful → join in PowerShell) is a natural candidate for a single reusable script with parameters for file paths and Event IDs.
-- **Generate test data deliberately.** Rather than relying on whatever events happened to exist on the system, intentionally triggering known activity — such as several failed login attempts followed by a successful one — produces cleaner, more meaningful correlation results and makes the exercise easier to validate.
-- **Add timestamps to the correlation output.** The current output shows all combinations of failed and successful logins for a given user. Adding a time-delta column (how many seconds/minutes between failure and success) would make brute-force patterns immediately obvious without manual inspection.
+- **Generate test data deliberately from the start.** I wasted time early on because I was relying on whatever events happened to already exist on the system. Intentionally triggering known activity produces cleaner results and makes it much easier to validate that your queries are working correctly.
+- **Add a time-delta column to the correlation output.** Right now the output shows all combinations of failed and successful logins for a given user but doesn't calculate the gap between them. A column showing how much time elapsed between failure and success would make brute-force patterns obvious at a glance.
 
 ---
 
